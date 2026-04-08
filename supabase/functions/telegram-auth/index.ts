@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient, type Session } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const cors = {
@@ -6,7 +7,6 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/** Проверка initData по https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app */
 function validateInitData(initData: string, botToken: string): boolean {
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
@@ -38,6 +38,15 @@ function parseUser(initData: string): Record<string, unknown> | null {
   }
 }
 
+/** Детерминированный пароль только на сервере (зависит от BOT_TOKEN). */
+function authPasswordForTelegram(telegramId: number, botToken: string): string {
+  return createHmac("sha256", botToken).update(`auth:${telegramId}`).digest("hex");
+}
+
+function emailForTelegram(telegramId: number): string {
+  return `tg_${telegramId}@telegram.miniapp`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: cors });
@@ -51,7 +60,10 @@ Deno.serve(async (req) => {
   }
 
   const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN")?.trim();
-  if (!botToken) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
+  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
+
+  if (!botToken || !supabaseUrl || !serviceRole) {
     return new Response(JSON.stringify({ ok: false, error: "server_misconfigured" }), {
       status: 500,
       headers: { ...cors, "Content-Type": "application/json" },
@@ -93,16 +105,115 @@ Deno.serve(async (req) => {
     });
   }
 
-  const user = parseUser(initData);
-  if (!user) {
+  const tgUser = parseUser(initData);
+  if (!tgUser || typeof tgUser.id !== "number") {
     return new Response(JSON.stringify({ ok: false, error: "no_user_in_init_data" }), {
       status: 400,
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
-  return new Response(JSON.stringify({ ok: true, user }), {
-    status: 200,
-    headers: { ...cors, "Content-Type": "application/json" },
+  const telegramId = tgUser.id;
+  const email = emailForTelegram(telegramId);
+  const password = authPasswordForTelegram(telegramId, botToken);
+
+  const admin = createClient(supabaseUrl, serviceRole, {
+    auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  let session: Session | null = null;
+
+  const trySignIn = await admin.auth.signInWithPassword({ email, password });
+  if (trySignIn.data.session) {
+    session = trySignIn.data.session;
+  } else {
+    const createRes = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        telegram_id: telegramId,
+        first_name: tgUser.first_name,
+        last_name: tgUser.last_name,
+        username: tgUser.username,
+      },
+    });
+
+    if (createRes.error) {
+      const msg = createRes.error.message ?? "";
+      const duplicate = /already|registered|exists/i.test(msg);
+      if (duplicate) {
+        const list = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+        const existing = list.data?.users?.find((u) => u.email === email);
+        if (existing?.id) {
+          await admin.auth.admin.updateUserById(existing.id, { password });
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ ok: false, error: "auth_create_failed", detail: msg }),
+          { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
+    const retry = await admin.auth.signInWithPassword({ email, password });
+    if (retry.error || !retry.data.session) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: "sign_in_failed",
+          detail: retry.error?.message ?? "no_session",
+        }),
+        { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+    session = retry.data.session;
+  }
+
+  const firstName = typeof tgUser.first_name === "string" ? tgUser.first_name : null;
+  const lastName = typeof tgUser.last_name === "string" ? tgUser.last_name : null;
+  const username = typeof tgUser.username === "string" ? tgUser.username : null;
+  const photoUrl =
+    typeof tgUser.photo_url === "string"
+      ? tgUser.photo_url
+      : typeof tgUser.photoUrl === "string"
+        ? tgUser.photoUrl
+        : null;
+  const languageCode = typeof tgUser.language_code === "string" ? tgUser.language_code : null;
+
+  const { error: profileErr } = await admin.from("profiles").upsert(
+    {
+      id: session.user.id,
+      telegram_id: telegramId,
+      first_name: firstName,
+      last_name: lastName,
+      username,
+      telegram_photo_url: photoUrl,
+      language_code: languageCode,
+    },
+    { onConflict: "id" },
+  );
+
+  if (profileErr) {
+    return new Response(JSON.stringify({ ok: false, error: "profile_upsert_failed", detail: profileErr.message }), {
+      status: 500,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      session: {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_in: session.expires_in,
+        expires_at: session.expires_at,
+        token_type: session.token_type,
+        user: session.user,
+      },
+      telegram_user: tgUser,
+    }),
+    { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+  );
 });

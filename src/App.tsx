@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { verifyTelegramInitData } from "@/lib/auth-telegram";
+import { signInWithTelegram } from "@/lib/auth-telegram";
 import { getInitData, initTelegramWebApp } from "@/lib/telegram";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { HomePage } from "@/pages/HomePage";
@@ -16,9 +16,9 @@ export default function App() {
     initTelegramWebApp();
     const initData = getInitData();
     if (!initData) return;
-    void verifyTelegramInitData(initData).then((r) => {
+    void signInWithTelegram(initData).then((r) => {
       if (r.ok) {
-        sessionStorage.setItem("tg_user", JSON.stringify(r.user));
+        sessionStorage.setItem("tg_user", JSON.stringify(r.telegramUser));
       }
     });
   }, []);

@@ -1,14 +1,14 @@
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 export type TelegramAuthResult =
-  | { ok: true; user: Record<string, unknown> }
-  | { ok: false; error: string };
+  | { ok: true; session: Session; telegramUser: Record<string, unknown> }
+  | { ok: false; error: string; detail?: string };
 
 /**
- * Отправляет initData на Edge Function `telegram-auth` (проверка hash на сервере).
- * Нужны VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY и задеплоенная функция с секретом TELEGRAM_BOT_TOKEN.
+ * Проверка initData и получение сессии Supabase (Edge Function `telegram-auth`).
  */
-export async function verifyTelegramInitData(initData: string): Promise<TelegramAuthResult> {
+export async function signInWithTelegram(initData: string): Promise<TelegramAuthResult> {
   if (!supabase) {
     return { ok: false, error: "supabase_not_configured" };
   }
@@ -21,10 +21,46 @@ export async function verifyTelegramInitData(initData: string): Promise<Telegram
     return { ok: false, error: error.message ?? "invoke_failed" };
   }
 
-  const payload = data as { ok?: boolean; user?: Record<string, unknown>; error?: string };
-  if (payload?.ok === true && payload.user) {
-    return { ok: true, user: payload.user };
+  const payload = data as {
+    ok?: boolean;
+    session?: {
+      access_token: string;
+      refresh_token: string;
+      expires_in?: number;
+      expires_at?: number;
+      token_type: string;
+      user: Session["user"];
+    };
+    telegram_user?: Record<string, unknown>;
+    error?: string;
+    detail?: string;
+  };
+
+  if (!payload?.ok || !payload.session) {
+    return {
+      ok: false,
+      error: payload?.error ?? "unknown",
+      detail: payload?.detail,
+    };
   }
 
-  return { ok: false, error: payload?.error ?? "unknown" };
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: payload.session.access_token,
+    refresh_token: payload.session.refresh_token,
+  });
+
+  if (sessionError) {
+    return { ok: false, error: sessionError.message };
+  }
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    return { ok: false, error: "no_session_after_set" };
+  }
+
+  return {
+    ok: true,
+    session: sessionData.session,
+    telegramUser: payload.telegram_user ?? {},
+  };
 }
