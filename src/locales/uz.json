@@ -1,0 +1,106 @@
+{
+  "app": {
+    "name": "Halal Sovchi"
+  },
+  "common": {
+    "languageSwitcherAria": "Tilni tanlash: o‘zbek yoki rus"
+  },
+  "nav": {
+    "discover": "Lenta",
+    "matches": "Matchlar",
+    "profile": "Profil",
+    "mainAria": "Asosiy navigatsiya"
+  },
+  "home": {
+    "heroTitle": "Nikoh uchun juftingizni toping",
+    "heroSubtitle": "O‘zbekistonda hurmatli jamoa — jiddiy munosabatlar uchun.",
+    "langUz": "O‘zbekcha",
+    "langRu": "Русский",
+    "cta": "Yo‘lga chiqish",
+    "consent": "Davom etish orqali jamoa qoidalariga rozilik bildirasiz.",
+    "rulesLink": "Qoidalar"
+  },
+  "discover": {
+    "title": "Lenta",
+    "filterAria": "Filtr",
+    "demoCardTitle": "Alisher, 27",
+    "demoCity": "Toshkent",
+    "skipAria": "O‘tkazish",
+    "likeAria": "Like",
+    "hint": "Keyingi bosqichda: filtrlar, kunlik limit va haqiqiy profillar.",
+    "fillProfile": "Profilni to‘ldirish"
+  },
+  "matches": {
+    "title": "Halal Sovchi",
+    "searchAria": "Qidiruv",
+    "filterAria": "Filtr",
+    "newSection": "Yangi matchlar",
+    "newBadge": "{{count}} yangi",
+    "conversations": "Suhbatlar",
+    "demo": {
+      "kamilaPreview": "Siz haqingizda ko‘proq bilmoqchi edim...",
+      "bekzodPreview": "Assalomu alaykum! Qalaysiz?",
+      "zuhraPreview": "Bu restoran juda zo‘r ekan!",
+      "dostonPreview": "Markazda ko‘rishamiz.",
+      "yesterday": "Kecha",
+      "wed": "Sesh",
+      "mon": "Dush"
+    }
+  },
+  "profile": {
+    "headerTitle": "Farrukh, 28",
+    "backAria": "Orqaga",
+    "menuAria": "Menyu",
+    "name": "Farrukh",
+    "location": "Samarqand, O‘zbekiston",
+    "verified": "Tasdiqlangan",
+    "chips": ["Dasturchi", "Turmushga chiqmagan", "O‘zbek, rus, ingliz"],
+    "aboutTitle": "O‘zim haqimda",
+    "aboutText": "Kasbiy maqsadlar va ma'naviy o'sish o'rtasida muvozanat qidiruvchi inson. Samarqandda tug'ilganman, an'analarimizni qadrlab, zamonaviy imkoniyatlarni ham qabul qilaman.",
+    "deenTitle": "Din va amaliyot",
+    "deen": {
+      "prayers": "Namoz",
+      "prayersVal": "Doimiy",
+      "food": "Ovqat",
+      "foodVal": "Halol",
+      "alcohol": "Alkogol",
+      "alcoholVal": "Ichmaydi",
+      "values": "Qadriyatlar",
+      "valuesVal": "Oila markazida"
+    },
+    "workTitle": "Ta'lim va ish",
+    "degree": "Kompyuter fanlari magistr",
+    "school": "TATU",
+    "jobTitle": "Katta dasturchi",
+    "jobPlace": "IT kompaniya (masofaviy)",
+    "lookingTitle": "Nima qidiryapman",
+    "lookingText": "\"Oila qadriyatlarini hurmat qiladigan, muloyim va sadoqatli inson — birga xonadon qurish uchun.\"",
+    "tags": ["MEHR", "IMON", "SADOQAT"],
+    "supabaseOk": "Supabase: ulangan",
+    "supabaseMissing": "Supabase: `.env` ni to‘ldiring",
+    "favoritesAria": "Sevimlilar",
+    "sendInterest": "Qiziqish bildirish",
+    "languageLabel": "Til"
+  },
+  "onboarding": {
+    "title": "Onboarding",
+    "body": "Keyinroq: jins, yosh, shahar, maqsad, diniy amaliyot, tillar, foto.",
+    "continue": "Davom etish",
+    "home": "Bosh sahifa"
+  },
+  "rules": {
+    "title": "Qoidalar",
+    "items": [
+      "Hurmatli muloqot, nikoh maqsadida tanishuv.",
+      "18 yoshdan kichiklar uchun emas.",
+      "Nomunos kontent va spam taqiqlanadi; shikoyat qilish mumkin."
+    ],
+    "footer": "To'liq huquqiy matn keyinroq qo'shiladi.",
+    "home": "Bosh sahifa"
+  },
+  "chat": {
+    "backAria": "Orqaga",
+    "placeholder": "Realtime xabarlar — keyingi bosqichda.",
+    "fallbackTitle": "Chat"
+  }
+}

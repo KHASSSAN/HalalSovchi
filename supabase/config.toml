@@ -1,0 +1,5 @@
+# Локальная разработка: `supabase link` и `supabase functions serve`
+# Деплой функции: `supabase functions deploy telegram-auth`
+
+[functions.telegram-auth]
+verify_jwt = false
