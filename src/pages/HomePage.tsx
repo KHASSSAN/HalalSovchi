@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { TelegramAuthStatus } from "@/components/TelegramAuthStatus";
 
 const HERO_BG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAlWPha4vJEOtFQnqioEOdtqQP6zb9yNxuhc_2N5ZC1xZn6yzdZ3Zl2k1pQWRelesKTNhejtWd1TPHJ3HV6N_oUxRki_-J-SRXTkKKA2iDHsdmk7_-7AAeKe3neo3O6n8PKEF36gEA_GHo3uigTQ634KNg67ViwpqPVey_BI8Ym3_s_xufaEDUPxDNv8n-TyuzoebNf2FU7Gv-l3gqBi0HiZyeVReyayXD-y4XCXv-7kU3__9BelxKoa-Za4JgOLyC5dX4P6K8VWNu5";
@@ -46,6 +47,8 @@ export function HomePage() {
 
         <div className="mb-12 w-full space-y-8">
           <LanguageSwitcher />
+
+          <TelegramAuthStatus />
 
           <div className="flex flex-col space-y-4">
             <Link

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { signInWithTelegram } from "@/lib/auth-telegram";
-import { getInitData, initTelegramWebApp } from "@/lib/telegram";
+import { getInitData, initTelegramWebApp, waitForInitData } from "@/lib/telegram";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { HomePage } from "@/pages/HomePage";
 import { OnboardingPage } from "@/pages/OnboardingPage";
@@ -15,8 +15,11 @@ export default function App() {
   useEffect(() => {
     initTelegramWebApp();
 
-    const runAuth = (attempt: number) => {
-      const initData = getInitData();
+    const runAuth = async (attempt: number) => {
+      const initData =
+        attempt === 0
+          ? await waitForInitData(5500)
+          : (getInitData() ?? (await waitForInitData(1200)));
       sessionStorage.setItem(
         "tg_auth_debug",
         JSON.stringify({
@@ -26,17 +29,16 @@ export default function App() {
         }),
       );
       if (!initData) return;
-      void signInWithTelegram(initData).then((r) => {
-        sessionStorage.setItem("tg_auth_result", JSON.stringify(r));
-        if (r.ok) {
-          sessionStorage.setItem("tg_user", JSON.stringify(r.telegramUser));
-        }
-      });
+      const r = await signInWithTelegram(initData);
+      sessionStorage.setItem("tg_auth_result", JSON.stringify(r));
+      if (r.ok) {
+        sessionStorage.setItem("tg_user", JSON.stringify(r.telegramUser));
+      }
     };
 
-    runAuth(0);
-    const t1 = window.setTimeout(() => runAuth(1), 400);
-    const t2 = window.setTimeout(() => runAuth(2), 1200);
+    void runAuth(0);
+    const t1 = window.setTimeout(() => void runAuth(1), 500);
+    const t2 = window.setTimeout(() => void runAuth(2), 2000);
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);

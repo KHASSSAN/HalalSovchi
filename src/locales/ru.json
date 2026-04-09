@@ -11,7 +11,9 @@
     "noSession": "Вход ещё не выполнен (нет сессии Supabase)",
     "noSupabase": "Нет VITE_SUPABASE_URL / ANON_KEY",
     "noInitData": "Нет initData — откройте Mini App только из Telegram.",
-    "jwtHint": "Проверьте: на Vercel заданы VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY этого проекта; Supabase → Authentication → Providers → Email включён; задеплоена новая версия Edge Function telegram-auth.",
+    "jwtHint": "Проверьте: Vercel — VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY этого же проекта; Supabase → Edge Functions → telegram-auth → «Verify JWT» выключен; Authentication → Providers → Email включён; функция telegram-auth задеплоена.",
+    "lastResponse": "Последний ответ (ошибка теперь видна по коду):",
+    "copyDiagnostics": "Скопировать в буфер",
     "retry": "Повторить вход"
   },
   "nav": {

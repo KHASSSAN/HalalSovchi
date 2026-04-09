@@ -48,4 +48,27 @@ export function getInitData(): string | undefined {
   return undefined;
 }
 
+/**
+ * В WebView initData иногда заполняется чуть позже первого кадра — опрашиваем коротко.
+ */
+export function waitForInitData(timeoutMs = 5000, pollMs = 80): Promise<string | undefined> {
+  const immediate = getInitData();
+  if (immediate) return Promise.resolve(immediate);
+  const start = Date.now();
+  return new Promise((resolve) => {
+    const id = window.setInterval(() => {
+      const d = getInitData();
+      if (d) {
+        window.clearInterval(id);
+        resolve(d);
+        return;
+      }
+      if (Date.now() - start >= timeoutMs) {
+        window.clearInterval(id);
+        resolve(undefined);
+      }
+    }, pollMs);
+  });
+}
+
 export { WebApp };

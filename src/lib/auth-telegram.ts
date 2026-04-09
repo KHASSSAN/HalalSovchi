@@ -1,4 +1,4 @@
-import type { Session } from "@supabase/supabase-js";
+import { FunctionsHttpError, type Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 export type TelegramAuthResult =
@@ -22,6 +22,36 @@ function parseFunctionsError(error: unknown): string {
   return msg;
 }
 
+/** При non-2xx тело JSON не попадает в `data`, только в `error.context` (Response). */
+async function parseFunctionsHttpError(
+  error: FunctionsHttpError,
+): Promise<{ error: string; detail?: string } | null> {
+  const res = error.context as Response | undefined;
+  if (!res || typeof res.clone !== "function") return null;
+  const raw = res.clone();
+  try {
+    const body = await res.json();
+    if (body && typeof body === "object") {
+      const b = body as { error?: string; detail?: string; message?: string; msg?: string };
+      const code = b.error ?? b.msg;
+      const detail = b.detail ?? (typeof b.message === "string" ? b.message : undefined);
+      if (code || detail) {
+        return { error: code ?? "http_error", detail };
+      }
+    }
+  } catch {
+    try {
+      const text = await raw.text();
+      if (text) {
+        return { error: "non_json_error", detail: text.slice(0, 400) };
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
+
 /**
  * Проверка initData и получение сессии Supabase (Edge Function `telegram-auth`).
  */
@@ -35,10 +65,13 @@ export async function signInWithTelegram(initData: string): Promise<TelegramAuth
   });
 
   if (error) {
-    return {
-      ok: false,
-      error: parseFunctionsError(error),
-    };
+    if (error instanceof FunctionsHttpError) {
+      const parsed = await parseFunctionsHttpError(error);
+      if (parsed) {
+        return { ok: false, error: parsed.error, detail: parsed.detail };
+      }
+    }
+    return { ok: false, error: parseFunctionsError(error) };
   }
 
   const payload = data as {

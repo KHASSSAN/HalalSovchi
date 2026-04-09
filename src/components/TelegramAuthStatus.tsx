@@ -11,11 +11,13 @@ export function TelegramAuthStatus() {
   const { t } = useTranslation();
   const [email, setEmail] = useState<string | null>(null);
   const [debugLine, setDebugLine] = useState<string>("");
+  const [rawResult, setRawResult] = useState<string>("");
 
   const refresh = useCallback(async () => {
     if (!supabase) {
       setEmail(null);
       setDebugLine(t("authDebug.noSupabase"));
+      setRawResult("");
       return;
     }
     const { data } = await supabase.auth.getSession();
@@ -23,6 +25,7 @@ export function TelegramAuthStatus() {
 
     const raw = sessionStorage.getItem("tg_auth_debug");
     const res = sessionStorage.getItem("tg_auth_result");
+    setRawResult(res ?? "");
     let extra = "";
     if (raw) {
       try {
@@ -75,6 +78,23 @@ export function TelegramAuthStatus() {
       )}
       {debugLine ? (
         <p className="mt-2 break-words text-xs text-on-surface-variant">{debugLine}</p>
+      ) : null}
+      {rawResult ? (
+        <div className="mt-3">
+          <p className="mb-1 text-xs text-on-surface-variant">{t("authDebug.lastResponse")}</p>
+          <pre className="max-h-40 overflow-auto rounded-lg bg-surface-container-high/80 p-2 text-[11px] leading-snug text-on-surface">
+            {rawResult}
+          </pre>
+          <button
+            type="button"
+            onClick={() => {
+              void navigator.clipboard.writeText(rawResult);
+            }}
+            className="mt-2 w-full rounded-lg border border-outline-variant/50 py-2 text-xs font-semibold text-on-surface active:scale-[0.99]"
+          >
+            {t("authDebug.copyDiagnostics")}
+          </button>
+        </div>
       ) : null}
       <p className="mt-3 text-xs leading-relaxed text-on-surface-variant">{t("authDebug.jwtHint")}</p>
       <button

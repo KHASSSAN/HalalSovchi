@@ -43,8 +43,9 @@ function authPasswordForTelegram(telegramId: number, botToken: string): string {
   return createHmac("sha256", botToken).update(`auth:${telegramId}`).digest("hex");
 }
 
+/** Локальная часть — только цифры; домен с валидным gTLD (валидаторы Auth не режут). */
 function emailForTelegram(telegramId: number): string {
-  return `tg_${telegramId}@telegram.miniapp`;
+  return `${telegramId}@telegram-auth.app`;
 }
 
 Deno.serve(async (req) => {
@@ -99,6 +100,7 @@ Deno.serve(async (req) => {
   }
 
   if (!validateInitData(initData, botToken)) {
+    console.error("[telegram-auth] invalid_hash");
     return new Response(JSON.stringify({ ok: false, error: "invalid_hash" }), {
       status: 401,
       headers: { ...cors, "Content-Type": "application/json" },
@@ -165,6 +167,7 @@ Deno.serve(async (req) => {
 
     if (createRes.error) {
       const msg = createRes.error.message ?? "";
+      console.error("[telegram-auth] createUser:", msg);
       const duplicate = /already|registered|exists/i.test(msg);
       if (duplicate) {
         const list = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
