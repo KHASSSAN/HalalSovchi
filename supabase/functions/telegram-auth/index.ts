@@ -106,16 +106,40 @@ Deno.serve(async (req) => {
   }
 
   const tgUser = parseUser(initData);
-  if (!tgUser || typeof tgUser.id !== "number") {
+  if (!tgUser || tgUser.id === undefined || tgUser.id === null) {
     return new Response(JSON.stringify({ ok: false, error: "no_user_in_init_data" }), {
       status: 400,
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
-  const telegramId = tgUser.id;
+  const rawId = tgUser.id;
+  const telegramId =
+    typeof rawId === "number" && Number.isFinite(rawId)
+      ? rawId
+      : parseInt(String(rawId).trim(), 10);
+  if (!Number.isFinite(telegramId) || telegramId <= 0) {
+    return new Response(JSON.stringify({ ok: false, error: "bad_telegram_id" }), {
+      status: 400,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
   const email = emailForTelegram(telegramId);
   const password = authPasswordForTelegram(telegramId, botToken);
+
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")?.trim();
+  if (!anonKey) {
+    return new Response(JSON.stringify({ ok: false, error: "server_misconfigured", detail: "no_anon_key" }), {
+      status: 500,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
+  /** Вход по паролю делаем через anon client — так Supabase Auth возвращает обычную user-сессию. */
+  const authClient = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 
   const admin = createClient(supabaseUrl, serviceRole, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -123,7 +147,7 @@ Deno.serve(async (req) => {
 
   let session: Session | null = null;
 
-  const trySignIn = await admin.auth.signInWithPassword({ email, password });
+  const trySignIn = await authClient.auth.signInWithPassword({ email, password });
   if (trySignIn.data.session) {
     session = trySignIn.data.session;
   } else {
@@ -156,7 +180,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const retry = await admin.auth.signInWithPassword({ email, password });
+    const retry = await authClient.auth.signInWithPassword({ email, password });
     if (retry.error || !retry.data.session) {
       return new Response(
         JSON.stringify({

@@ -5,6 +5,23 @@ export type TelegramAuthResult =
   | { ok: true; session: Session; telegramUser: Record<string, unknown> }
   | { ok: false; error: string; detail?: string };
 
+function parseFunctionsError(error: unknown): string {
+  if (!error || typeof error !== "object") return String(error);
+  const e = error as { message?: string; context?: { body?: string } };
+  let msg = e.message ?? "invoke_failed";
+  const body = e.context?.body;
+  if (body) {
+    try {
+      const j = JSON.parse(body) as { error?: string; detail?: string };
+      if (j.error) msg = `${msg}: ${j.error}`;
+      if (j.detail) msg += ` — ${j.detail}`;
+    } catch {
+      msg += ` — ${body.slice(0, 200)}`;
+    }
+  }
+  return msg;
+}
+
 /**
  * Проверка initData и получение сессии Supabase (Edge Function `telegram-auth`).
  */
@@ -18,7 +35,10 @@ export async function signInWithTelegram(initData: string): Promise<TelegramAuth
   });
 
   if (error) {
-    return { ok: false, error: error.message ?? "invoke_failed" };
+    return {
+      ok: false,
+      error: parseFunctionsError(error),
+    };
   }
 
   const payload = data as {

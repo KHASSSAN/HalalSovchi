@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { TelegramAuthStatus } from "@/components/TelegramAuthStatus";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -165,6 +166,8 @@ export function ProfilePage() {
             </div>
           </div>
         </section>
+
+        <TelegramAuthStatus />
 
         <div className="mb-6 flex flex-col items-center gap-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">

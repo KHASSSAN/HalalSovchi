@@ -5,6 +5,15 @@
   "common": {
     "languageSwitcherAria": "Tilni tanlash: o‘zbek yoki rus"
   },
+  "authDebug": {
+    "title": "Telegram orqali kirish",
+    "session": "Sessiya:",
+    "noSession": "Hali kirish yo‘q (Supabase sessiyasi)",
+    "noSupabase": "VITE_SUPABASE_URL / ANON_KEY yo‘q",
+    "noInitData": "initData yo‘q — Mini Appni faqat Telegram ichidan oching.",
+    "jwtHint": "Tekshiring: Vercel’da VITE_SUPABASE_URL va VITE_SUPABASE_ANON_KEY shu loyiha bilan mos; Supabase → Authentication → Providers → Email yoqilgan; Edge Function telegram-auth yangi versiyasi deploy qilingan.",
+    "retry": "Kirishni qayta urinish"
+  },
   "nav": {
     "discover": "Lenta",
     "matches": "Matchlar",

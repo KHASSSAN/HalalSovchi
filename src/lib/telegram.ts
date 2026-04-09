@@ -29,12 +29,23 @@ function applyThemeParams(): void {
     root.style.setProperty("--tg-theme-secondary-bg-color", p.secondary_bg_color);
 }
 
+/** initData из SDK или напрямую из window.Telegram (после telegram-web-app.js). */
 export function getInitData(): string | undefined {
   try {
-    return WebApp.initData;
+    const fromSdk = WebApp.initData;
+    if (fromSdk && fromSdk.length > 0) return fromSdk;
   } catch {
-    return undefined;
+    /* ignore */
   }
+  try {
+    const tg = (window as unknown as { Telegram?: { WebApp?: { initData?: string } } }).Telegram
+      ?.WebApp;
+    const raw = tg?.initData;
+    if (raw && raw.length > 0) return raw;
+  } catch {
+    /* ignore */
+  }
+  return undefined;
 }
 
 export { WebApp };

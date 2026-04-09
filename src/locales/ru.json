@@ -5,6 +5,15 @@
   "common": {
     "languageSwitcherAria": "Выбор языка: узбекский или русский"
   },
+  "authDebug": {
+    "title": "Вход через Telegram",
+    "session": "Сессия:",
+    "noSession": "Вход ещё не выполнен (нет сессии Supabase)",
+    "noSupabase": "Нет VITE_SUPABASE_URL / ANON_KEY",
+    "noInitData": "Нет initData — откройте Mini App только из Telegram.",
+    "jwtHint": "Проверьте: на Vercel заданы VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY этого проекта; Supabase → Authentication → Providers → Email включён; задеплоена новая версия Edge Function telegram-auth.",
+    "retry": "Повторить вход"
+  },
   "nav": {
     "discover": "Лента",
     "matches": "Совпадения",
