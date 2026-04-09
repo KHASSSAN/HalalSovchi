@@ -12,6 +12,8 @@ function validateInitData(initData: string, botToken: string): boolean {
   const hash = params.get("hash");
   if (!hash) return false;
   params.delete("hash");
+  /** Не участвует в HMAC для `hash` (см. Web Apps: third-party проверка по `signature` — те же поля, что и для hash). */
+  params.delete("signature");
 
   const pairs = [...params.entries()].sort(([a], [b]) => a.localeCompare(b));
   const dataCheckString = pairs.map(([k, v]) => `${k}=${v}`).join("\n");
